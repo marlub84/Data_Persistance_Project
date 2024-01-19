@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text bestScore;
     public GameObject GameOverText;
     
     private bool m_Started = false;
@@ -18,6 +20,7 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
+    private bool bestSave = false;
     
     // Start is called before the first frame update
     void Start()
@@ -36,6 +39,9 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        // show best player
+        bestScore.text = $"Best score : {Data.Instance.bestPalyerName} {Data.Instance.score}";
     }
 
     private void Update()
@@ -55,9 +61,18 @@ public class MainManager : MonoBehaviour
         }
         else if (m_GameOver)
         {
+            if (bestSave)
+            {
+                SaveBest();
+            }
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape)) 
+            {
+                SceneManager.LoadScene(0);
             }
         }
     }
@@ -66,11 +81,26 @@ public class MainManager : MonoBehaviour
     {
         m_Points += point;
         ScoreText.text = $"Score : {m_Points}";
+
+        if (Data.Instance.score < m_Points)
+        {
+            bestScore.text = $"Best score : {Data.Instance._name} {m_Points}";
+            bestSave = true;
+        }
+
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+    }
+
+    private void SaveBest()
+    {
+        Data.Instance.bestPalyerName = Data.Instance._name;
+        Data.Instance.score = m_Points;
+        Data.Instance.SaveData();
+        bestSave = false;
     }
 }
